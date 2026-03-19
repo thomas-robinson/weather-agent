@@ -293,10 +293,10 @@ with gr.Blocks(title="Storm — Personal Meteorologist") as demo:
         with gr.Column(scale=3):
             chatbot = gr.Chatbot(
                 value=[{"role": "assistant", "content": INTRO_MESSAGE}],
+                type="messages",
                 label="Storm",
                 height=520,
                 avatar_images=(None, "https://api.dicebear.com/7.x/bottts/svg?seed=storm"),
-                buttons=["copy_all"],
             )
             with gr.Row():
                 msg_input = gr.Textbox(
