@@ -109,9 +109,13 @@ def chat(
     tool_calls_display: list[str] = []
     final_answer = ""
 
+    # Show user message immediately with a "Thinking..." placeholder
+    updated_history = history + [(message, "🤔 *Thinking...*")]
+    yield updated_history, ""
+
     try:
         graph = _get_graph()
-        # Stream events so we can surface tool calls to the UI
+        # Stream events so we can surface tool calls to the UI in real time
         for event in graph.stream(state, stream_mode="values"):
             messages = event.get("messages", [])
             if not messages:
@@ -128,6 +132,10 @@ def chat(
                         tool_calls_display.append(
                             f"🔧 **Calling `{tool_name}`** with: `{json.dumps(tool_args)}`"
                         )
+                    # Yield intermediate update so user sees the tool being called
+                    thinking = "\n\n".join(tool_calls_display)
+                    updated_history[-1] = (message, f"*Reasoning…*\n\n{thinking}")
+                    yield updated_history, ""
                 elif last.content:
                     final_answer = last.content
 
@@ -136,20 +144,22 @@ def chat(
                 tool_calls_display.append(
                     f"✅ **`{tool_name}` returned** — data received"
                 )
-
-        # Yield streaming updates showing tool activity
-        thinking_display = "\n\n".join(tool_calls_display) if tool_calls_display else ""
-        if thinking_display:
-            partial_answer = f"*Reasoning…*\n\n{thinking_display}\n\n---\n\n{final_answer}"
-        else:
-            partial_answer = final_answer
+                # Yield intermediate update so user sees the tool result arrive
+                thinking = "\n\n".join(tool_calls_display)
+                updated_history[-1] = (message, f"*Reasoning…*\n\n{thinking}")
+                yield updated_history, ""
 
     except Exception as exc:
         final_answer = f"⚠️ Agent error: {exc}\n\nPlease check that your `NVIDIA_API_KEY` is set correctly."
+
+    # Final yield with the complete reasoning trace and answer
+    thinking_display = "\n\n".join(tool_calls_display) if tool_calls_display else ""
+    if thinking_display:
+        partial_answer = f"*Agent Reasoning:*\n\n{thinking_display}\n\n---\n\n{final_answer}"
+    else:
         partial_answer = final_answer
 
-    # Return updated history
-    updated_history = history + [(message, partial_answer)]
+    updated_history[-1] = (message, partial_answer)
     yield updated_history, ""
 
 
