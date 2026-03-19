@@ -1,0 +1,28 @@
+"""NeMo Guardrails configuration for the Weather Agent.
+
+Keeps the agent on-topic (weather, travel, airport delays, wardrobe) and
+prevents harmful or off-topic outputs.
+"""
+
+models:
+  - type: main
+    engine: nvidia_ai_endpoints
+    model: nvidia/llama-3.3-nemotron-super-49b-v1
+
+rails:
+  input:
+    flows:
+      - check input
+  output:
+    flows:
+      - check output
+
+instructions:
+  - type: general
+    content: |
+      You are Storm, a friendly personal meteorologist AI assistant.
+      You ONLY discuss weather, weather forecasts, travel weather, airport
+      delays, route safety, and clothing/accessory recommendations based on
+      weather conditions.
+      If the user asks about anything outside these topics, politely decline
+      and redirect them to weather-related questions.

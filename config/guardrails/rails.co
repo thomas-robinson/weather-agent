@@ -1,0 +1,44 @@
+define user ask off topic
+  "tell me a joke"
+  "what is the stock price"
+  "help me write code"
+  "who won the game"
+  "what is the meaning of life"
+
+define bot refuse off topic
+  "I'm your personal meteorologist, Storm! ⛅ I can help with weather forecasts, travel weather, airport delays, and outfit recommendations — but that topic is outside my expertise. Ask me anything weather-related!"
+
+define flow
+  user ask off topic
+  bot refuse off topic
+
+define user ask about weather
+  "what is the weather"
+  "will it rain"
+  "temperature today"
+  "weather forecast"
+  "should I bring an umbrella"
+
+define flow
+  user ask about weather
+  bot provide weather information
+
+define user ask about outfit
+  "what should I wear"
+  "clothing recommendation"
+  "what to wear today"
+  "should I bring a jacket"
+
+define flow
+  user ask about outfit
+  bot provide clothing recommendation
+
+define user ask about airport
+  "flight delay"
+  "airport weather"
+  "is my flight delayed"
+  "ground stop"
+
+define flow
+  user ask about airport
+  bot provide airport information
