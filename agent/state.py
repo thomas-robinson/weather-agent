@@ -24,3 +24,6 @@ class AgentState(TypedDict):
 
     # Flag set when a morning briefing has been requested.
     morning_briefing_requested: bool
+
+    # Required by langgraph's create_react_agent to limit tool-call loops.
+    remaining_steps: int

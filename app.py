@@ -23,6 +23,12 @@ from agent.prompts import MORNING_BRIEFING_PROMPT
 from models.schemas import UserProfile
 
 # ---------------------------------------------------------------------------
+# Error classification helpers
+# ---------------------------------------------------------------------------
+
+_AUTH_ERROR_KEYWORDS = ("api key", "apikey", "401", "unauthorized", "authentication", "forbidden", "nvapi")
+
+# ---------------------------------------------------------------------------
 # Build the LangGraph agent (compiled once at startup)
 # ---------------------------------------------------------------------------
 _graph = None
@@ -92,6 +98,7 @@ def chat(
         "user_profile": profile,
         "tool_results": {},
         "morning_briefing_requested": False,
+        "remaining_steps": 25,
     }
 
     # Prepend conversation history as messages
@@ -157,7 +164,11 @@ def chat(
             partial_answer = final_answer
 
     except Exception as exc:
-        final_answer = f"⚠️ Agent error: {exc}\n\nPlease check that your `NVIDIA_API_KEY` is set correctly."
+        err_str = str(exc)
+        if any(kw in err_str.lower() for kw in _AUTH_ERROR_KEYWORDS):
+            final_answer = f"⚠️ Agent error: {exc}\n\nPlease check that your `NVIDIA_API_KEY` is set correctly."
+        else:
+            final_answer = f"⚠️ Agent error: {exc}"
         partial_answer = final_answer
 
     # Return updated history with the final answer
