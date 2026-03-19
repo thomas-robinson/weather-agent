@@ -69,7 +69,7 @@ def _profile_from_ui(
 
 def chat(
     message: str,
-    history: list[dict[str, str]],
+    history: list[tuple[str | None, str | None]],
     name: str,
     location: str,
     commute: str,
@@ -78,7 +78,7 @@ def chat(
     activities: str,
     airport_code: str,
     flight_time: str,
-) -> Generator[tuple[list[dict[str, str]], str], None, None]:
+) -> Generator[tuple[list[tuple[str | None, str | None]], str], None, None]:
     """Process a user message and stream the agent's response."""
     profile = _profile_from_ui(
         name, location, commute, cold_sens, style, activities, airport_code, flight_time
@@ -99,10 +99,11 @@ def chat(
         from langchain_core.messages import AIMessage, HumanMessage as HM
         prior: list[Any] = []
         for turn in history:
-            if turn.get("role") == "user":
-                prior.append(HM(content=turn["content"]))
-            elif turn.get("role") == "assistant":
-                prior.append(AIMessage(content=turn["content"]))
+            user_msg, bot_msg = turn[0], turn[1]
+            if user_msg:
+                prior.append(HM(content=user_msg))
+            if bot_msg:
+                prior.append(AIMessage(content=bot_msg))
         state["messages"] = prior + state["messages"]
 
     tool_calls_display: list[str] = []
@@ -148,15 +149,12 @@ def chat(
         partial_answer = final_answer
 
     # Return updated history
-    updated_history = history + [
-        {"role": "user", "content": message},
-        {"role": "assistant", "content": partial_answer},
-    ]
+    updated_history = history + [(message, partial_answer)]
     yield updated_history, ""
 
 
 def morning_briefing(
-    history: list[dict[str, str]],
+    history: list[tuple[str | None, str | None]],
     name: str,
     location: str,
     commute: str,
@@ -165,7 +163,7 @@ def morning_briefing(
     activities: str,
     airport_code: str,
     flight_time: str,
-) -> Generator[tuple[list[dict[str, str]], str], None, None]:
+) -> Generator[tuple[list[tuple[str | None, str | None]], str], None, None]:
     """Trigger the full morning briefing workflow."""
     profile = _profile_from_ui(
         name, location, commute, cold_sens, style, activities, airport_code, flight_time
@@ -173,10 +171,7 @@ def morning_briefing(
 
     if not profile.default_location:
         updated_history = history + [
-            {
-                "role": "assistant",
-                "content": "⚠️ Please set your **Default Location** in the sidebar before requesting a Morning Briefing!",
-            }
+            (None, "⚠️ Please set your **Default Location** in the sidebar before requesting a Morning Briefing!")
         ]
         yield updated_history, ""
         return
@@ -292,8 +287,7 @@ with gr.Blocks(title="Storm — Personal Meteorologist") as demo:
         # ---- Chat area -----------------------------------------------------
         with gr.Column(scale=3):
             chatbot = gr.Chatbot(
-                value=[{"role": "assistant", "content": INTRO_MESSAGE}],
-                type="messages",
+                value=[(None, INTRO_MESSAGE)],
                 label="Storm",
                 height=520,
                 avatar_images=(None, "https://api.dicebear.com/7.x/bottts/svg?seed=storm"),
