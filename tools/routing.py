@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tools.weather import get_current_weather
+from tools.weather import get_current_weather, get_temperature_unit
 from tools.alerts import get_weather_alerts
 from utils.geocoding import geocode_location
 
@@ -30,6 +30,7 @@ def get_route_weather(origin: str, destination: str) -> dict[str, Any]:
     mid_lat = (lat1 + lat2) / 2
     mid_lon = (lon1 + lon2) / 2
     midpoint = f"{mid_lat:.4f},{mid_lon:.4f}"
+    unit_suffix = "°F" if get_temperature_unit() == "fahrenheit" else "°C"
 
     results: dict[str, Any] = {
         "origin": origin,
@@ -47,7 +48,7 @@ def get_route_weather(origin: str, destination: str) -> dict[str, Any]:
         wx_origin = get_current_weather(origin)
         results["origin_weather_summary"] = (
             f"{wx_origin['weather_description']}, "
-            f"{wx_origin['temperature_c']:.1f}°C, "
+            f"{wx_origin['temperature_c']:.1f}{unit_suffix}, "
             f"wind {wx_origin['wind_speed_kmh']:.1f} km/h"
         )
     except Exception as exc:
@@ -58,7 +59,7 @@ def get_route_weather(origin: str, destination: str) -> dict[str, Any]:
         wx_dest = get_current_weather(destination)
         results["destination_weather_summary"] = (
             f"{wx_dest['weather_description']}, "
-            f"{wx_dest['temperature_c']:.1f}°C, "
+            f"{wx_dest['temperature_c']:.1f}{unit_suffix}, "
             f"wind {wx_dest['wind_speed_kmh']:.1f} km/h"
         )
     except Exception as exc:
@@ -69,7 +70,7 @@ def get_route_weather(origin: str, destination: str) -> dict[str, Any]:
         wx_mid = get_current_weather(midpoint)
         results["midpoint_weather_summary"] = (
             f"{wx_mid['weather_description']}, "
-            f"{wx_mid['temperature_c']:.1f}°C"
+            f"{wx_mid['temperature_c']:.1f}{unit_suffix}"
         )
     except Exception:
         results["midpoint_weather_summary"] = "Unavailable"

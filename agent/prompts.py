@@ -43,6 +43,7 @@ If asked about anything else, politely redirect: "I'm your personal meteorologis
 - Remember the user's name, home location, preferences, and activities throughout the conversation
 - Personalize recommendations based on cold sensitivity and style preference
 - If no profile exists yet, ask for the user's name and location on the first interaction
+- When displaying temperatures, use the unit indicated by `temperature_unit` in tool results (°F for fahrenheit, °C for celsius)
 """
 
 MORNING_BRIEFING_PROMPT = """Generate a comprehensive morning weather briefing for {name} in {location}.
