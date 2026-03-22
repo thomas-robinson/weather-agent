@@ -21,6 +21,7 @@ load_dotenv()
 from agent.graph import build_graph
 from agent.prompts import MORNING_BRIEFING_PROMPT
 from models.schemas import UserProfile
+from tools.weather import set_temperature_unit
 
 # ---------------------------------------------------------------------------
 # Error classification helpers
@@ -54,6 +55,7 @@ def _profile_from_ui(
     activities: str,
     airport_code: str,
     flight_time: str,
+    temp_unit: str,
 ) -> UserProfile:
     """Build a UserProfile from sidebar UI fields."""
     flight_info: dict[str, str] = {}
@@ -70,6 +72,7 @@ def _profile_from_ui(
         style_preference=style,
         activities_today=[a.strip() for a in activities.split(",") if a.strip()],
         flight_info=flight_info,
+        temperature_unit=temp_unit.lower(),
     )
 
 
@@ -84,11 +87,15 @@ def chat(
     activities: str,
     airport_code: str,
     flight_time: str,
+    temp_unit: str,
 ) -> Generator[tuple[list[dict[str, str]], str], None, None]:
     """Process a user message and stream the agent's response."""
     profile = _profile_from_ui(
-        name, location, commute, cold_sens, style, activities, airport_code, flight_time
+        name, location, commute, cold_sens, style, activities, airport_code, flight_time, temp_unit
     )
+
+    # Apply the user's temperature unit preference for all weather tool calls
+    set_temperature_unit(profile.temperature_unit)
 
     # Build LangGraph input
     from langchain_core.messages import HumanMessage
@@ -189,11 +196,16 @@ def morning_briefing(
     activities: str,
     airport_code: str,
     flight_time: str,
+    temp_unit: str,
 ) -> Generator[tuple[list[dict[str, str]], str], None, None]:
     """Trigger the full morning briefing workflow."""
     profile = _profile_from_ui(
-        name, location, commute, cold_sens, style, activities, airport_code, flight_time
+        name, location, commute, cold_sens, style, activities, airport_code, flight_time, temp_unit
     )
+
+    # Apply the user's temperature unit preference (also set inside chat(), but
+    # set it here as well so any code before the chat() delegation is consistent).
+    set_temperature_unit(profile.temperature_unit)
 
     if not profile.default_location:
         updated_history = history + [
@@ -223,6 +235,7 @@ def morning_briefing(
         activities,
         airport_code,
         flight_time,
+        temp_unit,
     )
 
 
@@ -294,6 +307,11 @@ with gr.Blocks(title="Storm — Personal Meteorologist") as demo:
                 choices=["casual", "business casual", "formal", "athletic"],
                 value="casual",
             )
+            temp_unit_input = gr.Dropdown(
+                label="Temperature Unit",
+                choices=["Fahrenheit", "Celsius"],
+                value="Fahrenheit",
+            )
             activities_input = gr.Textbox(
                 label="Activities Today (comma-separated)",
                 placeholder="e.g. commute, outdoor lunch, gym",
@@ -351,6 +369,7 @@ with gr.Blocks(title="Storm — Personal Meteorologist") as demo:
         activities_input,
         airport_input,
         flight_time_input,
+        temp_unit_input,
     ]
 
     # ---- Wire up send button and Enter key

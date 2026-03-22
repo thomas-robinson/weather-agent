@@ -16,6 +16,7 @@ class UserProfile(BaseModel):
     style_preference: str = "casual"  # casual, business casual, formal, athletic
     activities_today: list[str] = Field(default_factory=list)
     flight_info: dict[str, Any] = Field(default_factory=dict)
+    temperature_unit: str = "fahrenheit"  # "fahrenheit" or "celsius"
 
 
 class CurrentWeather(BaseModel):

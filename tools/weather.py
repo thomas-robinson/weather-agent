@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextvars
 import datetime
 from typing import Any
 
@@ -9,6 +10,24 @@ import httpx
 
 from config.settings import OPEN_METEO_FORECAST_URL, WMO_CODE_MAP
 from utils.geocoding import geocode_location
+
+# ---------------------------------------------------------------------------
+# Temperature unit context variable — set this before running the agent so
+# all weather tool calls in the same thread respect the user's preference.
+# ---------------------------------------------------------------------------
+_temperature_unit_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "temperature_unit", default="fahrenheit"
+)
+
+
+def set_temperature_unit(unit: str) -> None:
+    """Set the temperature unit for the current context ('fahrenheit' or 'celsius')."""
+    _temperature_unit_var.set(unit.lower())
+
+
+def get_temperature_unit() -> str:
+    """Return the temperature unit for the current context."""
+    return _temperature_unit_var.get()
 
 
 def _wmo_desc(code: int) -> str:
@@ -26,6 +45,7 @@ def get_current_weather(location: str) -> dict[str, Any]:
         feels-like temperature, and a human-readable weather description.
     """
     lat, lon = geocode_location(location)
+    temperature_unit = get_temperature_unit()
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -40,6 +60,7 @@ def get_current_weather(location: str) -> dict[str, Any]:
             "uv_index",
         ],
         "wind_speed_unit": "kmh",
+        "temperature_unit": temperature_unit,
         "timezone": "auto",
     }
     with httpx.Client(timeout=15) as client:
@@ -61,6 +82,7 @@ def get_current_weather(location: str) -> dict[str, Any]:
         "weather_description": _wmo_desc(current.get("weather_code", 0)),
         "uv_index": current.get("uv_index"),
         "timestamp": current.get("time", datetime.datetime.now(datetime.UTC).isoformat()),
+        "temperature_unit": temperature_unit,
     }
 
 
@@ -126,6 +148,7 @@ def get_hourly_forecast(location: str, hours: int = 12) -> dict[str, Any]:
     """
     hours = max(1, min(hours, 48))
     lat, lon = geocode_location(location)
+    temperature_unit = get_temperature_unit()
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -138,6 +161,7 @@ def get_hourly_forecast(location: str, hours: int = 12) -> dict[str, Any]:
             "weather_code",
         ],
         "wind_speed_unit": "kmh",
+        "temperature_unit": temperature_unit,
         "timezone": "auto",
         "forecast_hours": hours,
     }
@@ -170,7 +194,7 @@ def get_hourly_forecast(location: str, hours: int = 12) -> dict[str, Any]:
                 "weather_description": _wmo_desc(code),
             }
         )
-    return {"location": location, "entries": entries}
+    return {"location": location, "entries": entries, "temperature_unit": temperature_unit}
 
 
 def get_daily_forecast(location: str, days: int = 7) -> dict[str, Any]:
@@ -186,6 +210,7 @@ def get_daily_forecast(location: str, days: int = 7) -> dict[str, Any]:
     """
     days = max(1, min(days, 16))
     lat, lon = geocode_location(location)
+    temperature_unit = get_temperature_unit()
     params = {
         "latitude": lat,
         "longitude": lon,
@@ -198,6 +223,7 @@ def get_daily_forecast(location: str, days: int = 7) -> dict[str, Any]:
             "sunset",
             "weather_code",
         ],
+        "temperature_unit": temperature_unit,
         "timezone": "auto",
         "forecast_days": days,
     }
@@ -233,4 +259,4 @@ def get_daily_forecast(location: str, days: int = 7) -> dict[str, Any]:
                 "weather_description": _wmo_desc(code),
             }
         )
-    return {"location": location, "entries": entries}
+    return {"location": location, "entries": entries, "temperature_unit": temperature_unit}

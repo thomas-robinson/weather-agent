@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from tools.weather import get_current_weather, get_hourly_forecast, get_daily_forecast
+from tools.weather import get_current_weather, get_hourly_forecast, get_daily_forecast, get_temperature_unit
 from tools.alerts import get_weather_alerts
 from agent.prompts import CLOTHING_REASONING_PROMPT
 
@@ -31,13 +31,14 @@ def get_clothing_recommendation(
         Dictionary with recommended items, accessories, layers, and notes.
     """
     # Gather weather data
+    unit_suffix = "°F" if get_temperature_unit() == "fahrenheit" else "°C"
     weather_parts: list[str] = []
     try:
         current = get_current_weather(location)
         weather_parts.append(
             f"Current: {current['weather_description']}, "
-            f"temp {current['temperature_c']:.1f}°C "
-            f"(feels like {current['feels_like_c']:.1f}°C), "
+            f"temp {current['temperature_c']:.1f}{unit_suffix} "
+            f"(feels like {current['feels_like_c']:.1f}{unit_suffix}), "
             f"humidity {current['humidity_pct']}%, "
             f"wind {current['wind_speed_kmh']:.1f} km/h, "
             f"UV index {current['uv_index']}"
@@ -58,7 +59,7 @@ def get_clothing_recommendation(
                 max(e.get("temperature_c") or 0 for e in entries),
             )
             weather_parts.append(
-                f"Next 12 hours: temp range {temp_range[0]:.1f}–{temp_range[1]:.1f}°C, "
+                f"Next 12 hours: temp range {temp_range[0]:.1f}–{temp_range[1]:.1f}{unit_suffix}, "
                 f"max precipitation probability {max_precip_prob:.0f}%"
             )
     except Exception:
@@ -70,8 +71,8 @@ def get_clothing_recommendation(
         if entries:
             today = entries[0]
             weather_parts.append(
-                f"Today's forecast: high {today.get('temp_max_c'):.1f}°C, "
-                f"low {today.get('temp_min_c'):.1f}°C, "
+                f"Today's forecast: high {today.get('temp_max_c'):.1f}{unit_suffix}, "
+                f"low {today.get('temp_min_c'):.1f}{unit_suffix}, "
                 f"precipitation {today.get('precipitation_sum_mm'):.1f} mm, "
                 f"UV max {today.get('uv_index_max'):.1f}"
             )
