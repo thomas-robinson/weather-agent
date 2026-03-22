@@ -23,9 +23,8 @@ reasoning, multi-step tool chaining, and real-world weather intelligence.
               └────────┬────────┘
                        │
          ┌─────────────▼──────────────┐
-         │  NVIDIA Nemotron (NIM API)  │
-         │  nvidia/llama-3.1-nemotron │
-         │  -nano-8b-v1               │
+         │  NVIDIA Nemotron (NIM API) │
+         │  nvidia/llama-3.3-nemotron │
          │  + NeMo Guardrails         │
          └─────────────┬──────────────┘
                        │
@@ -147,7 +146,7 @@ weather-agent/
 
 | Tool | Role |
 |---|---|
-| **NVIDIA Nemotron Nano** (`nvidia/llama-3.1-nemotron-nano-8b-v1`) | Core LLM — all reasoning, planning, response generation |
+| **NVIDIA Nemotron** (`nvidia/llama-3.3-nemotron-super-49b-v1`) | Core LLM — all reasoning, planning, response generation |
 | **NVIDIA NIM API** | Model hosting and inference endpoint |
 | **langchain-nvidia-ai-endpoints** | Native LangChain integration for NIM |
 | **NeMo Guardrails** | Safety and topic control |
@@ -181,6 +180,6 @@ Click the **☀️ Morning Briefing** button to have Storm autonomously:
 ## ⚙️ Configuration
 
 All configurable values live in `config/settings.py`:
-- `NIM_MODEL` — currently `nvidia/llama-3.1-nemotron-nano-8b-v1`; swap to a larger model (e.g. `nvidia/llama-3.3-nemotron-super-49b-v1`) for higher reasoning quality
+- `NIM_MODEL` — swap to `nvidia/nemotron-nano-8b-v1` for faster, lighter inference
 - `NIM_TEMPERATURE` — controls response creativity (default 0.6)
 - `NIM_MAX_TOKENS` — max response length (default 4096)
