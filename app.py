@@ -98,7 +98,7 @@ def chat(
         "user_profile": profile,
         "tool_results": {},
         "morning_briefing_requested": False,
-        "remaining_steps": 25,
+        "remaining_steps": 50,
     }
 
     # Prepend conversation history as messages
