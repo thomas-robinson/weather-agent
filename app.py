@@ -140,7 +140,7 @@ def chat(
                         {"role": "user", "content": message},
                         {"role": "assistant", "content": partial_answer},
                     ], ""
-                elif last.content:
+                if last.content:
                     final_answer = last.content
 
             elif msg_type == "ToolMessage":
