@@ -12,8 +12,8 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 NVIDIA_API_KEY: str = os.environ.get("NVIDIA_API_KEY", "")
 NIM_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
-# Primary model; fall back to the smaller variant if unavailable.
-NIM_MODEL: str = "nvidia/llama-3.3-nemotron-super-49b-v1"
+# Primary model — Nemotron Nano 8B for fast tool-routing and summarization.
+NIM_MODEL: str = "nvidia/llama-3.1-nemotron-nano-8b-v1"
 NIM_TEMPERATURE: float = 0.6
 NIM_MAX_TOKENS: int = 4096
 
